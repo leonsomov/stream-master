@@ -11,7 +11,7 @@ StreamMasterEditor::StreamMasterEditor (StreamMasterProcessor& p)
     titleLabel.setColour (juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible (titleLabel);
 
-    statusLabel.setText ("v0 — passthrough only\nnetworking lands next",
+    statusLabel.setText ("v0  /  passthrough only\nnetworking lands next",
                          juce::dontSendNotification);
     statusLabel.setFont (juce::FontOptions (13.0f));
     statusLabel.setJustificationType (juce::Justification::centred);
