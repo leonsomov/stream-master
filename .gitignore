@@ -1,0 +1,27 @@
+# Build output
+build/
+build-*/
+cmake-build-*/
+
+# JUCE / plugin artifacts
+*.component
+*.vst3
+*.app
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE
+.vscode/
+.idea/
+*.xcodeproj
+*.xcworkspace
+DerivedData/
+
+# macOS
+.DS_Store
+._*
+
+# Logs
+*.log
