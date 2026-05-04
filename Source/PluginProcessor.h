@@ -31,6 +31,16 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    juce::String getStreamId() const   { return streamId; }
+    void regenerateStreamId();
+    juce::String getStreamUrl() const;
+
+    static constexpr const char* receiverUrlBase = "https://stream.geekypunks.com/r/";
+
 private:
+    juce::String streamId;
+
+    static juce::String generateRandomId();
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StreamMasterProcessor)
 };
