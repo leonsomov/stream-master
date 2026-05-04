@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(GPStream VERSION 0.1.0 LANGUAGES C CXX)
+project(StreamMaster VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "" FORCE)
@@ -10,13 +10,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(JUCE)
 
-juce_add_plugin(GPStream
+juce_add_plugin(StreamMaster
     COMPANY_NAME              "Geeky Punks"
-    BUNDLE_ID                 "com.geekypunks.gpstream"
+    BUNDLE_ID                 "com.geekypunks.streammaster"
     PLUGIN_MANUFACTURER_CODE  Gpks
-    PLUGIN_CODE               Gpst
+    PLUGIN_CODE               Strm
     FORMATS                   AU VST3 Standalone
-    PRODUCT_NAME              "GP Stream"
+    PRODUCT_NAME              "Stream Master"
     IS_SYNTH                  FALSE
     NEEDS_MIDI_INPUT          FALSE
     NEEDS_MIDI_OUTPUT         FALSE
@@ -27,13 +27,13 @@ juce_add_plugin(GPStream
     AU_MAIN_TYPE              kAudioUnitType_Effect
 )
 
-target_sources(GPStream
+target_sources(StreamMaster
     PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
 )
 
-target_compile_definitions(GPStream
+target_compile_definitions(StreamMaster
     PUBLIC
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL=0
@@ -41,7 +41,7 @@ target_compile_definitions(GPStream
         JUCE_DISPLAY_SPLASH_SCREEN=0
 )
 
-target_link_libraries(GPStream
+target_link_libraries(StreamMaster
     PRIVATE
         juce::juce_audio_utils
     PUBLIC

@@ -3,19 +3,19 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
 
-class GPStreamEditor : public juce::AudioProcessorEditor
+class StreamMasterEditor : public juce::AudioProcessorEditor
 {
 public:
-    explicit GPStreamEditor (GPStreamProcessor&);
-    ~GPStreamEditor() override;
+    explicit StreamMasterEditor (StreamMasterProcessor&);
+    ~StreamMasterEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    GPStreamProcessor& processor;
+    StreamMasterProcessor& processor;
     juce::Label titleLabel;
     juce::Label statusLabel;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GPStreamEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StreamMasterEditor)
 };

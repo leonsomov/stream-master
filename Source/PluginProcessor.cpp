@@ -1,19 +1,19 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-GPStreamProcessor::GPStreamProcessor()
+StreamMasterProcessor::StreamMasterProcessor()
     : AudioProcessor (BusesProperties()
                           .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
                           .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
 {
 }
 
-GPStreamProcessor::~GPStreamProcessor() = default;
+StreamMasterProcessor::~StreamMasterProcessor() = default;
 
-void GPStreamProcessor::prepareToPlay (double, int) {}
-void GPStreamProcessor::releaseResources() {}
+void StreamMasterProcessor::prepareToPlay (double, int) {}
+void StreamMasterProcessor::releaseResources() {}
 
-bool GPStreamProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool StreamMasterProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     const auto& mainOut = layouts.getMainOutputChannelSet();
     const auto& mainIn  = layouts.getMainInputChannelSet();
@@ -23,7 +23,7 @@ bool GPStreamProcessor::isBusesLayoutSupported (const BusesLayout& layouts) cons
     return true;
 }
 
-void GPStreamProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+void StreamMasterProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
 
@@ -34,15 +34,15 @@ void GPStreamProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         buffer.clear (i, 0, buffer.getNumSamples());
 }
 
-juce::AudioProcessorEditor* GPStreamProcessor::createEditor()
+juce::AudioProcessorEditor* StreamMasterProcessor::createEditor()
 {
-    return new GPStreamEditor (*this);
+    return new StreamMasterEditor (*this);
 }
 
-void GPStreamProcessor::getStateInformation (juce::MemoryBlock&) {}
-void GPStreamProcessor::setStateInformation (const void*, int)   {}
+void StreamMasterProcessor::getStateInformation (juce::MemoryBlock&) {}
+void StreamMasterProcessor::setStateInformation (const void*, int)   {}
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new GPStreamProcessor();
+    return new StreamMasterProcessor();
 }

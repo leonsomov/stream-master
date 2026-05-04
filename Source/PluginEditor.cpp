@@ -1,11 +1,11 @@
 #include "PluginEditor.h"
 
-GPStreamEditor::GPStreamEditor (GPStreamProcessor& p)
+StreamMasterEditor::StreamMasterEditor (StreamMasterProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
     setSize (380, 180);
 
-    titleLabel.setText ("GP Stream", juce::dontSendNotification);
+    titleLabel.setText ("Stream Master", juce::dontSendNotification);
     titleLabel.setFont (juce::FontOptions (24.0f, juce::Font::bold));
     titleLabel.setJustificationType (juce::Justification::centred);
     titleLabel.setColour (juce::Label::textColourId, juce::Colours::white);
@@ -19,14 +19,14 @@ GPStreamEditor::GPStreamEditor (GPStreamProcessor& p)
     addAndMakeVisible (statusLabel);
 }
 
-GPStreamEditor::~GPStreamEditor() = default;
+StreamMasterEditor::~StreamMasterEditor() = default;
 
-void GPStreamEditor::paint (juce::Graphics& g)
+void StreamMasterEditor::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colour (0xff121212));
 }
 
-void GPStreamEditor::resized()
+void StreamMasterEditor::resized()
 {
     auto area = getLocalBounds().reduced (16);
     titleLabel.setBounds (area.removeFromTop (40));

@@ -1,4 +1,4 @@
-# GP Stream
+# Stream Master
 
 Low-latency audio streaming plugin for Logic Pro and Bitwig Studio.
 
@@ -7,9 +7,7 @@ Low-latency audio streaming plugin for Logic Pro and Bitwig Studio.
 ## Plan
 
 Master-bus plugin that encodes the stereo mix with Opus and streams one-way to a
-collaborator's browser via WebRTC. Working title; rename later.
-
-See [PLAN.md](PLAN.md) for the full architecture and roadmap.
+collaborator's browser via WebRTC.
 
 ## Build
 
@@ -20,21 +18,17 @@ Requires:
 
 ```sh
 git submodule update --init --recursive
-cmake -B build -G Xcode
-cmake --build build --config Release
+cmake -B build
+cmake --build build --config Release -j 8
 ```
 
-Outputs land in `build/GPStream_artefacts/Release/`:
-- `AU/GP Stream.component`
-- `VST3/GP Stream.vst3`
+`COPY_PLUGIN_AFTER_BUILD` is enabled, so the build auto-installs to:
 
-## Install locally
+- `~/Library/Audio/Plug-Ins/Components/Stream Master.component`
+- `~/Library/Audio/Plug-Ins/VST3/Stream Master.vst3`
+
+## Validate (optional)
 
 ```sh
-ln -sf "$PWD/build/GPStream_artefacts/Release/AU/GP Stream.component" \
-  ~/Library/Audio/Plug-Ins/Components/
-ln -sf "$PWD/build/GPStream_artefacts/Release/VST3/GP Stream.vst3" \
-  ~/Library/Audio/Plug-Ins/VST3/
+auval -v aufx Strm Gpks
 ```
-
-Restart Logic / Bitwig and rescan plugins.

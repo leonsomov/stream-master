@@ -2,11 +2,11 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
-class GPStreamProcessor : public juce::AudioProcessor
+class StreamMasterProcessor : public juce::AudioProcessor
 {
 public:
-    GPStreamProcessor();
-    ~GPStreamProcessor() override;
+    StreamMasterProcessor();
+    ~StreamMasterProcessor() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -16,7 +16,7 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override { return "GP Stream"; }
+    const juce::String getName() const override { return "Stream Master"; }
     bool acceptsMidi()  const override { return false; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
@@ -32,5 +32,5 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GPStreamProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StreamMasterProcessor)
 };
