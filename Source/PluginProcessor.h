@@ -35,7 +35,7 @@ public:
     void regenerateStreamId();
     juce::String getStreamUrl() const;
 
-    static constexpr const char* receiverUrlBase = "https://stream.geekypunks.com/r/";
+    static constexpr const char* receiverUrlBase = "https://leonsomov.github.io/stream-master/?r=";
 
 private:
     juce::String streamId;
