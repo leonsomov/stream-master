@@ -25,3 +25,10 @@ DerivedData/
 
 # Logs
 *.log
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Fly.io
+.fly/
