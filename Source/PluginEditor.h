@@ -17,7 +17,9 @@ private:
     void timerCallback() override;
     void copyLink();
     void regenerateId();
+    void toggleStreaming();
     void refreshIdDisplay();
+    void refreshStatus();
 
     StreamMasterProcessor& processor;
 
@@ -26,9 +28,8 @@ private:
     juce::Label       idDisplay;
     juce::TextButton  regenButton    { "New" };
     juce::TextButton  copyButton     { "Copy Link" };
+    juce::TextButton  streamButton   { "Start Streaming" };
     juce::Label       statusLabel;
-
-    bool showingCopiedFeedback = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StreamMasterEditor)
 };

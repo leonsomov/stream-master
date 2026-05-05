@@ -7,12 +7,13 @@ namespace colours
     static const juce::Colour textPrimary { 0xfff2f2f2 };
     static const juce::Colour textMuted   { 0xff8a8a8a };
     static const juce::Colour accent      { 0xff7cf2a8 };
+    static const juce::Colour live        { 0xffe54848 };
 }
 
 StreamMasterEditor::StreamMasterEditor (StreamMasterProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-    setSize (440, 240);
+    setSize (480, 240);
 
     titleLabel.setText ("Stream Master", juce::dontSendNotification);
     titleLabel.setFont (juce::FontOptions (22.0f, juce::Font::bold));
@@ -46,14 +47,17 @@ StreamMasterEditor::StreamMasterEditor (StreamMasterProcessor& p)
     copyButton.onClick = [this] { copyLink(); };
     addAndMakeVisible (copyButton);
 
+    streamButton.onClick = [this] { toggleStreaming(); };
+    addAndMakeVisible (streamButton);
+
     statusLabel.setFont (juce::FontOptions (12.0f));
     statusLabel.setColour (juce::Label::textColourId, colours::textMuted);
     statusLabel.setJustificationType (juce::Justification::centred);
-    statusLabel.setText ("backend not wired yet  /  receiver page is a placeholder",
-                         juce::dontSendNotification);
     addAndMakeVisible (statusLabel);
 
     refreshIdDisplay();
+    refreshStatus();
+    startTimerHz (4);
 }
 
 StreamMasterEditor::~StreamMasterEditor() = default;
@@ -79,7 +83,11 @@ void StreamMasterEditor::resized()
     idDisplay.setBounds (idRow);
 
     area.removeFromTop (16);
-    copyButton.setBounds (area.removeFromTop (40));
+    auto buttonRow = area.removeFromTop (40);
+    const int half = (buttonRow.getWidth() - 8) / 2;
+    copyButton.setBounds   (buttonRow.removeFromLeft (half));
+    buttonRow.removeFromLeft (8);
+    streamButton.setBounds (buttonRow);
 
     area.removeFromTop (16);
     statusLabel.setBounds (area.removeFromTop (20));
@@ -89,8 +97,13 @@ void StreamMasterEditor::copyLink()
 {
     juce::SystemClipboard::copyTextToClipboard (processor.getStreamUrl());
     copyButton.setButtonText ("Copied");
-    showingCopiedFeedback = true;
-    startTimer (1500);
+
+    juce::Component::SafePointer<StreamMasterEditor> safe (this);
+    juce::Timer::callAfterDelay (1500, [safe]
+    {
+        if (safe != nullptr)
+            safe->copyButton.setButtonText ("Copy Link");
+    });
 }
 
 void StreamMasterEditor::regenerateId()
@@ -99,17 +112,56 @@ void StreamMasterEditor::regenerateId()
     refreshIdDisplay();
 }
 
+void StreamMasterEditor::toggleStreaming()
+{
+    processor.setStreaming (! processor.isStreaming());
+    refreshStatus();
+}
+
 void StreamMasterEditor::refreshIdDisplay()
 {
     idDisplay.setText (processor.getStreamId(), juce::dontSendNotification);
 }
 
+void StreamMasterEditor::refreshStatus()
+{
+    const bool live = processor.isStreaming();
+
+    if (live)
+    {
+        streamButton.setButtonText ("Stop Streaming");
+        streamButton.setColour (juce::TextButton::buttonColourId,    colours::live);
+        streamButton.setColour (juce::TextButton::buttonOnColourId,  colours::live);
+        streamButton.setColour (juce::TextButton::textColourOffId,   juce::Colours::white);
+        streamButton.setColour (juce::TextButton::textColourOnId,    juce::Colours::white);
+    }
+    else
+    {
+        streamButton.setButtonText ("Start Streaming");
+        streamButton.setColour (juce::TextButton::buttonColourId,    colours::panel);
+        streamButton.setColour (juce::TextButton::buttonOnColourId,  colours::panel);
+        streamButton.setColour (juce::TextButton::textColourOffId,   colours::textPrimary);
+        streamButton.setColour (juce::TextButton::textColourOnId,    colours::textPrimary);
+    }
+
+    const auto frames = processor.getFramesCaptured();
+    const auto rate   = processor.getRunningSampleRate();
+    const auto totalSeconds = (rate > 0.0) ? (double) frames / rate : 0.0;
+    const int  mins = (int) (totalSeconds / 60.0);
+    const int  secs = (int) totalSeconds % 60;
+
+    const auto stateText = live ? juce::String ("Live") : juce::String ("Idle");
+    const auto timeText  = juce::String::formatted ("%d:%02d captured", mins, secs);
+    auto detail = stateText + "  /  " + timeText;
+
+    const auto dropped = processor.getFramesDropped();
+    if (dropped > 0)
+        detail += juce::String::formatted ("  /  %lld dropped", (long long) dropped);
+
+    statusLabel.setText (detail, juce::dontSendNotification);
+}
+
 void StreamMasterEditor::timerCallback()
 {
-    if (showingCopiedFeedback)
-    {
-        copyButton.setButtonText ("Copy Link");
-        showingCopiedFeedback = false;
-    }
-    stopTimer();
+    refreshStatus();
 }

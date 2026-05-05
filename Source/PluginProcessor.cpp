@@ -7,11 +7,28 @@ StreamMasterProcessor::StreamMasterProcessor()
                           .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
 {
     streamId = generateRandomId();
+    streamThread.startThread (juce::Thread::Priority::normal);
 }
 
-StreamMasterProcessor::~StreamMasterProcessor() = default;
+StreamMasterProcessor::~StreamMasterProcessor()
+{
+    streaming.store (false, std::memory_order_release);
+    streamThread.stopThread (1000);
+}
 
-void StreamMasterProcessor::prepareToPlay (double, int) {}
+void StreamMasterProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    runningSampleRate.store (sampleRate, std::memory_order_relaxed);
+
+    const int capacitySamples = juce::jmax (48000, (int) (sampleRate * 2.0));
+    fifoBuffer.setSize (2, capacitySamples, false, true, true);
+    fifoBuffer.clear();
+    audioFifo.setTotalSize (capacitySamples);
+    audioFifo.reset();
+
+    juce::ignoreUnused (samplesPerBlock);
+}
+
 void StreamMasterProcessor::releaseResources() {}
 
 bool StreamMasterProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -28,11 +45,38 @@ void StreamMasterProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
 {
     juce::ScopedNoDenormals noDenormals;
 
-    const auto totalNumInputChannels  = getTotalNumInputChannels();
-    const auto totalNumOutputChannels = getTotalNumOutputChannels();
+    const auto totalIn  = getTotalNumInputChannels();
+    const auto totalOut = getTotalNumOutputChannels();
 
-    for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    for (int i = totalIn; i < totalOut; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+
+    if (! streaming.load (std::memory_order_acquire))
+        return;
+
+    const auto numSamples  = buffer.getNumSamples();
+    const auto numChannels = juce::jmin (2, buffer.getNumChannels());
+
+    int start1, size1, start2, size2;
+    audioFifo.prepareToWrite (numSamples, start1, size1, start2, size2);
+
+    const int written = size1 + size2;
+    const int dropped = numSamples - written;
+
+    for (int ch = 0; ch < numChannels; ++ch)
+    {
+        if (size1 > 0)
+            fifoBuffer.copyFrom (ch, start1, buffer, ch, 0, size1);
+        if (size2 > 0)
+            fifoBuffer.copyFrom (ch, start2, buffer, ch, size1, size2);
+    }
+
+    audioFifo.finishedWrite (written);
+
+    if (written > 0)
+        framesCaptured.fetch_add (written, std::memory_order_relaxed);
+    if (dropped > 0)
+        framesDropped.fetch_add (dropped, std::memory_order_relaxed);
 }
 
 juce::AudioProcessorEditor* StreamMasterProcessor::createEditor()
@@ -69,6 +113,24 @@ juce::String StreamMasterProcessor::getStreamUrl() const
     return juce::String (receiverUrlBase) + streamId;
 }
 
+void StreamMasterProcessor::setStreaming (bool shouldStream)
+{
+    if (shouldStream == streaming.load (std::memory_order_acquire))
+        return;
+
+    if (shouldStream)
+    {
+        framesCaptured.store (0, std::memory_order_relaxed);
+        framesDropped.store  (0, std::memory_order_relaxed);
+        audioFifo.reset();
+        streaming.store (true, std::memory_order_release);
+    }
+    else
+    {
+        streaming.store (false, std::memory_order_release);
+    }
+}
+
 juce::String StreamMasterProcessor::generateRandomId()
 {
     static const char alphabet[] = "abcdefghijkmnpqrstuvwxyz23456789";
@@ -86,6 +148,21 @@ juce::String StreamMasterProcessor::generateRandomId()
             id << alphabet[rng.nextInt (alphabetSize)];
     }
     return id;
+}
+
+void StreamMasterProcessor::StreamThread::run()
+{
+    while (! threadShouldExit())
+    {
+        const int avail = processor.audioFifo.getNumReady();
+        if (avail > 0)
+        {
+            int start1, size1, start2, size2;
+            processor.audioFifo.prepareToRead (avail, start1, size1, start2, size2);
+            processor.audioFifo.finishedRead (size1 + size2);
+        }
+        wait (5);
+    }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
