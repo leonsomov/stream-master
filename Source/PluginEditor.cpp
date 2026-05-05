@@ -150,7 +150,7 @@ void StreamMasterEditor::refreshStatus()
     const int  mins = (int) (totalSeconds / 60.0);
     const int  secs = (int) totalSeconds % 60;
 
-    const auto stateText = live ? juce::String ("Live") : juce::String ("Idle");
+    const auto stateText = live ? juce::String ("Capturing (offline)") : juce::String ("Idle");
     const auto timeText  = juce::String::formatted ("%d:%02d captured", mins, secs);
     auto detail = stateText + "  /  " + timeText;
 
