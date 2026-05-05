@@ -5,102 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stream Master</title>
   <meta name="description" content="Listener page for Stream Master sessions.">
-  <style>
-    :root {
-      --bg: #121212;
-      --panel: #1c1c1c;
-      --text: #f2f2f2;
-      --muted: #8a8a8a;
-      --accent: #7cf2a8;
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 20px;
-    }
-    h1 {
-      font-size: 32px;
-      font-weight: 700;
-      margin: 0 0 32px 0;
-      letter-spacing: -0.01em;
-    }
-    .panel {
-      background: var(--panel);
-      border-radius: 12px;
-      padding: 32px 36px;
-      max-width: 480px;
-      width: 100%;
-      text-align: center;
-    }
-    .label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
-    .id {
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 22px;
-      color: var(--accent);
-      margin-bottom: 28px;
-      word-break: break-all;
-    }
-    .id.empty {
-      color: var(--muted);
-    }
-    .status {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-    .footer {
-      margin-top: 40px;
-      font-size: 12px;
-      color: var(--muted);
-      text-align: center;
-    }
-    .footer a {
-      color: var(--muted);
-      text-decoration: underline;
-    }
-    .footer a:hover { color: var(--text); }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Stream Master</h1>
-  <div class="panel">
-    <div class="label">listening to room</div>
+  <h1 id="page-title">Stream Master</h1>
+
+  <div class="panel" id="main-panel">
+    <div class="label" id="role-label">listening to room</div>
     <div class="id" id="room-id">(no room)</div>
-    <div class="status" id="status">waiting for sender to come online</div>
+    <div class="status" id="status">connecting</div>
+
+    <button id="start-button" class="primary" hidden>Tap to listen</button>
+    <button id="send-start-button" class="primary" hidden>Start sending test tone</button>
+
+    <audio id="audio" autoplay playsinline></audio>
   </div>
+
+  <div class="chat" id="chat" hidden>
+    <div class="chat-label">SESSION CHAT</div>
+    <div class="chat-log" id="chat-log" aria-live="polite"></div>
+    <form class="chat-form" id="chat-form">
+      <input
+        type="text"
+        id="chat-input"
+        placeholder="type a message"
+        autocomplete="off"
+        maxlength="500"
+      >
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
   <p class="footer">
-    receiver stub  /  WebRTC backend pending  /
+    <span id="footer-mode">receiver</span>  /  WebRTC + Opus  /
     <a href="https://github.com/leonsomov/stream-master">source</a>
   </p>
-  <script>
-    (function () {
-      var params = new URLSearchParams(location.search);
-      var roomId = params.get('r');
-      var idEl = document.getElementById('room-id');
-      var statusEl = document.getElementById('status');
-      if (roomId && /^[a-z0-9-]{4,32}$/.test(roomId)) {
-        idEl.textContent = roomId;
-        idEl.classList.remove('empty');
-        document.title = 'Stream Master  /  ' + roomId;
-      } else {
-        idEl.classList.add('empty');
-        statusEl.textContent = 'open this page with ?r=<id> to listen';
-      }
-    })();
-  </script>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
