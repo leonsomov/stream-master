@@ -5,39 +5,49 @@ receiver and forwards WebRTC handshake messages (SDP offer/answer, ICE
 candidates). Audio never traverses this server.
 
 Runs on Deno Deploy (free tier, no card required, no cold-start sleep).
+State is held in Deno KV so that peers landing on different isolates still
+pair correctly.
 
 ## Local
 
 ```sh
-# Run the broker on :8000 (Deno default)
+# Run the broker on :8000 (Deno default).
+# --unstable-kv is needed locally; Deno Deploy enables KV automatically.
 deno task dev
 
 # In another shell, run the smoke test against localhost
 deno task test
 
-# Or test against a deployed broker
-BROKER_URL=wss://stream-master-leon.deno.dev deno task test
+# Or test against the deployed broker
+BROKER_URL=wss://stream-master.leonsomov.deno.net deno task test
 ```
 
-## Deploy (Deno Deploy)
+## Deploy
 
-1. Sign in at https://dash.deno.com with the GitHub account that owns the repo.
-2. New Project → Link this GitHub repo (`leonsomov/stream-master`).
-3. Production branch: `main`. Entrypoint: `signaling/server.ts`.
-4. Project name: `stream-master-leon` (or whatever produces a free
-   `<name>.deno.dev` URL).
-5. First deploy happens automatically. Subsequent pushes to `main` redeploy.
+GitHub-linked auto-deploy: every push to `main` redeploys.
 
-The broker is then reachable at `wss://stream-master-leon.deno.dev`. Both the
-plugin and the receiver page point at this URL with their respective roles.
+Initial setup (already done for this repo):
+1. https://dash.deno.com → New App
+2. Repo: `leonsomov/stream-master`
+3. App directory: `signaling`
+4. Entrypoint: `server.ts`
+5. Production branch: `main`
 
-## Limitation
+Live URL: `https://stream-master.leonsomov.deno.net`
 
-State (active rooms) is held in an in-memory Map per Deno Deploy isolate. If
-two peers land on different isolates they will not see each other. In practice
-both peers usually hit the same isolate when they connect within ~60s of each
-other, because the first connection keeps the isolate warm.
+## Storage layout (Deno KV)
 
-If this turns out to bite (peers connecting > 1 minute apart frequently
-failing to pair), the fix is to swap the in-memory Map for Deno KV with
-`watch()` for cross-isolate coordination. Deferred until needed.
+| Key                                    | Value         | TTL  | Purpose                                                |
+|----------------------------------------|---------------|------|--------------------------------------------------------|
+| `["rooms", id, "presence", role]`      | `{ ts }`      | 30s  | Liveness beacon, refreshed every 10s by heartbeat      |
+| `["rooms", id, "seq",      role]`      | `number`      | 5min | Atomic monotonic counter for outbound message sequence |
+| `["rooms", id, "msgs",     role, seq]` | envelope JSON | 60s  | A single relay envelope (offer / answer / candidate)   |
+
+Each connection watches the partner's `presence` and `seq` keys. On any
+change, the watcher reads any unseen messages from the `msgs` prefix and
+forwards them to the local WebSocket.
+
+## Wire protocol
+
+JSON envelopes over WebSocket. See the comment block at the top of
+`server.ts` for the full message catalog.
