@@ -267,15 +267,23 @@ Deno.serve(async (req: Request) => {
   if (url.pathname === "/health") {
     // Best-effort room count: list distinct roomIds in presence keys.
     const seen = new Set<string>();
+    let kvErr: string | null = null;
     try {
       const iter = kv.list({ prefix: ["rooms"] });
       for await (const entry of iter) {
         if (entry.key[2] === "presence") seen.add(entry.key[1] as string);
       }
     } catch (err) {
+      kvErr = (err as Error).message;
       console.warn("health list failed:", err);
     }
-    return Response.json({ ok: true, rooms: seen.size });
+    return Response.json({
+      ok: true,
+      rooms: seen.size,
+      backend: "kv",
+      build: "kv-v1",
+      kvErr,
+    });
   }
 
   if (req.headers.get("upgrade") !== "websocket") {
